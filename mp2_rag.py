@@ -16,7 +16,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from dotenv import dotenv_values, load_dotenv
+from dotenv import load_dotenv
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
@@ -55,21 +55,13 @@ def get_openai_client() -> OpenAI:
 def get_qdrant_client() -> QdrantClient:
     global _qdrant_client
     if _qdrant_client is None:
-        qdrant_settings = dotenv_values(LEARNER_DIR / ".env.example")
-        url = (
-            qdrant_settings.get("QDRANT_URL")
-            or qdrant_settings.get("qdrant_url")
-            or os.environ.get("QDRANT_URL")
-            or os.environ.get("qdrant_url")
-        )
+        url = os.environ.get("QDRANT_URL") or os.environ.get("qdrant_url")
         if not url:
-            raise RuntimeError("QDRANT_URL is missing; add it to learner/.env.example.")
+            raise RuntimeError("QDRANT_URL is missing; set the Qdrant URL in the environment.")
         _qdrant_client = QdrantClient(
             url=url,
             api_key=(
-                qdrant_settings.get("QDRANT_API_KEY")
-                or qdrant_settings.get("qdrant_api_key")
-                or os.environ.get("QDRANT_API_KEY")
+                os.environ.get("QDRANT_API_KEY")
                 or os.environ.get("qdrant_api_key")
                 or None
             ),
