@@ -33,8 +33,10 @@ CHAT_MODEL        = "gpt-4o-mini"
 TARGET_CHUNK_SIZE = 500   # characters
 CHUNK_OVERLAP     = 80    # characters
 
+# Om: Load the local settings relative to this script so commands work from this folder.
 load_dotenv(LEARNER_DIR / ".env")
 
+# Om: Create each client only when it is first needed, not just when this file is imported.
 _openai_client: OpenAI | None = None
 _qdrant_client: QdrantClient | None = None
 
@@ -80,6 +82,7 @@ def load_corpus(corpus_dir: Path) -> list[dict[str, Any]]:
     Files are read in name order so ingestion and citations are reproducible.
     """
     documents: list[dict[str, Any]] = []
+    # Om: Sorting keeps document and chunk order stable between runs.
     for path in sorted(corpus_dir.glob("*.txt")):
         text = path.read_text(encoding="utf-8").strip()
         title = next((line.strip() for line in text.splitlines() if line.strip()), path.stem)
@@ -124,6 +127,7 @@ def chunk_document(doc: dict[str, Any]) -> list[dict[str, Any]]:
             paragraphs.append((current_section, paragraph))
         pending.clear()
 
+    # Om: The first line is the story title; short heading-like lines label later sections.
     for line in lines[1:]:
         stripped = line.strip()
         if not stripped:
@@ -148,6 +152,7 @@ def chunk_document(doc: dict[str, Any]) -> list[dict[str, Any]]:
         if len(paragraph) <= TARGET_CHUNK_SIZE:
             pieces.append((section, paragraph))
             continue
+        # Om: Split long paragraphs near word boundaries and overlap adjacent pieces for context.
         remaining = paragraph
         while len(remaining) > TARGET_CHUNK_SIZE:
             boundary = remaining.rfind(" ", 0, TARGET_CHUNK_SIZE + 1)
@@ -166,6 +171,7 @@ def chunk_document(doc: dict[str, Any]) -> list[dict[str, Any]]:
         if chunk_text:
             chunks.append({"source": source, "title": title, "section": chunk_section, "text": chunk_text})
 
+    # Om: Pack pieces without crossing section boundaries or the target chunk length.
     for section, piece in pieces:
         separator = "\n\n" if chunk_text else ""
         if chunk_text and (chunk_section != section or len(chunk_text) + len(separator) + len(piece) > TARGET_CHUNK_SIZE):
@@ -204,6 +210,7 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     for start in range(0, len(texts), batch_size):
         batch = texts[start:start + batch_size]
         response = client.embeddings.create(model=EMBEDDING_MODEL, input=batch)
+        # Om: Use the response index so vectors stay aligned with their original texts.
         for item in response.data:
             vectors[start + item.index] = item.embedding
     if any(vector is None for vector in vectors):
@@ -219,6 +226,7 @@ def setup_collection() -> None:
     Existing collections are replaced to keep ingestion idempotent.
     """
     client = get_qdrant_client()
+    # Om: Recreate this project collection so a new ingest cannot mix with stale vectors.
     if client.collection_exists(COLLECTION_NAME):
         client.delete_collection(COLLECTION_NAME)
     client.create_collection(
@@ -255,6 +263,7 @@ def retrieve(query: str, k: int = 3) -> list[dict[str, Any]]:
         return []
     query_vector = embed_texts([query])[0]
     client = get_qdrant_client()
+    # Om: Support both current and older Qdrant client search methods.
     if hasattr(client, "query_points"):
         response = client.query_points(
             collection_name=COLLECTION_NAME,
@@ -298,6 +307,7 @@ def answer(question: str, k: int = 3) -> dict[str, Any]:
     citations: list[dict[str, Any]] = []
     context_parts: list[str] = []
     seen: set[tuple[str, str]] = set()
+    # Om: Keep story and section labels in the prompt so answers can cite their evidence.
     for chunk in chunks:
         title = str(chunk.get("title") or chunk.get("source") or "Unknown source")
         section = str(chunk.get("section") or "Unspecified section")
@@ -345,6 +355,7 @@ def validate_against(jsonl_path: Path) -> None:
         source_hit = q["expected_source"] in cited_sources
 
         ans_lower = result["answer"].lower()
+        # Om: Count literal expected phrases as a simple validation signal, not semantic scoring.
         facts_hit = sum(1 for fact in q.get("expected_facts", []) if fact.lower() in ans_lower)
         facts_total = len(q.get("expected_facts", []))
 
