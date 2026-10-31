@@ -1,0 +1,52 @@
+MP2 validation record
+
+Ingestion: completed. The script loaded 5 corpus documents, generated 86 chunks (maximum length 500 characters), and stored all 86 vectors in the `mp2_sherlock` collection.
+
+Validation command output:
+
+```text
+  Validating 2 questions from predefined_questions.jsonl…
+
+  ✓ q1_red_headed_league_assistant
+	  Q: Who was the assistant working at Jabez Wilson's pawnshop, and what was his real identity?
+	  Cited: 01_red_headed_league.txt
+	  Expected: 01_red_headed_league.txt
+	  Facts matched: 1/5
+	  Latency: 4282ms
+
+  ✓ q2_speckled_band_murder_weapon
+	  Q: What killed Julia Stoner at Stoke Moran, and how was the method discovered?
+	  Cited: 02_speckled_band.txt
+	  Expected: 02_speckled_band.txt
+	  Facts matched: 4/6
+	  Latency: 2957ms
+
+  Source-match: 2/2
+
+  Validating 3 questions from learner_questions.jsonl…
+
+  ✓ q3_blue_carbuncle_discovery
+	  Q: Who found the Blue Carbuncle in the Christmas goose?
+	  Cited: 03_blue_carbuncle.txt
+	  Expected: 03_blue_carbuncle.txt
+	  Facts matched: 3/3
+	  Latency: 2259ms
+
+  ✓ q4_engineers_thumb_counterfeit_press
+	  Q: What was Colonel Stark's real identity, and what was the press actually used to produce?
+	  Cited: 04_engineers_thumb.txt
+	  Expected: 04_engineers_thumb.txt
+	  Facts matched: 1/3
+	  Latency: 2249ms
+
+  ✓ q5_irene_adler_escape
+	  Q: How did Irene Adler discover Holmes's plan, and what did Holmes find when he returned to Briony Lodge the next morning?
+	  Cited: 05_scandal_in_bohemia.txt
+	  Expected: 05_scandal_in_bohemia.txt
+	  Facts matched: 1/4
+	  Latency: 4033ms
+
+  Source-match: 3/3
+```
+
+All 5 expected sources were cited. Exact-fact matches were lower for Q1, Q4, and Q5, so some answer details need review despite the correct source citations. No secrets or environment files are included in this deliverable.
