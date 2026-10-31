@@ -49,4 +49,4 @@ Validation command output:
   Source-match: 3/3
 ```
 
-All 5 expected sources were cited. Exact-fact matches were lower for Q1, Q4, and Q5, so some answer details need review despite the correct source citations. No secrets or environment files are included in this deliverable.
+All 5 expected sources were cited. Exact-fact matches were lower for Q1, Q4, and Q5, so some answer details need review despite the correct source citations.
